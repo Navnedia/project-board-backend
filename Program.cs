@@ -48,7 +48,7 @@ app.UseCors("AllowAllOrigins");
 
 //! I might split the different endpoint modules into seperate files.
 
-// Deletes the database and recreates it  with sample data loaded from a json file.
+// API endpoint to deletes the database and recreates it with sample data loaded from a json file.
 app.MapGet("/initialize", async (ProjectContext context) => {
     // Delete and recreate the database:
     await context.Database.EnsureDeletedAsync();
@@ -78,11 +78,71 @@ app.MapGet("/initialize", async (ProjectContext context) => {
     } catch (Exception e) {
         Console.WriteLine("Issue adding/saving loaded projects to Database:\n" + e);
     }
-}).WithName("InitializeData").WithOpenApi();
+})
+.WithName("InitializeData")
+.WithOpenApi();
+
+// API endpoint to request a list of all project listings.
+app.MapGet("/projects", async (ProjectContext context) => (
+    await context.Projects.ToListAsync()
+))
+.WithName("GetProjects")
+.WithOpenApi();
+
+// API endpoint to request a project listing with the given id. 
+app.MapGet("/projects/{id}", async (int id, ProjectContext context) => {
+    Project? project = await context.Projects.FindAsync(id);
+
+    return (project is null) 
+        ? Results.NotFound() 
+        : Results.Ok(project);
+})
+.WithName("GetProjectById")
+.WithOpenApi();
+
+// API endpoint to create/post a new project listing.
+app.MapPost("/projects", async (Project project, ProjectContext context) => {
+    context.Projects.Add(project);
+    await context.SaveChangesAsync();
+
+    return Results.Created($"/projects/{project.Id}", project);
+})
+.WithName("CreateProject")
+.WithOpenApi();
+
+// API endpoint to update properties of a specified project.
+app.MapPut("/projects/{id}", async (int id, Project updatedProject, ProjectContext context) => {
+    // Find the project by id and check for null:
+    Project? project = await context.Projects.FindAsync(id);
+    if (project is null) { return Results.NotFound(); }
+
+    // Make updates to project and save changes to the database while preseving the Id:
+    project.Title = updatedProject.Title;
+    project.Description = updatedProject.Description;
+    project.Summary = updatedProject.Summary;
+    project.CoverImageURL = updatedProject.CoverImageURL;
+    project.ContactEmail = updatedProject.ContactEmail;
+    await context.SaveChangesAsync();
+
+    return Results.NoContent();
+})
+.WithName("UpdateProject")
+.WithOpenApi();
+
+// API endpoint to fully remove a project listing from the database.
+app.MapDelete("/projects/{id}", async (int id, ProjectContext context) => {
+    // Find the project to be deleted by id and check for null:
+    Project? toBeDeleted = await context.Projects.FindAsync(id);
+    if (toBeDeleted is null) { return Results.NotFound(); }
+
+    // Remove item from database and commit changes:
+    context.Projects.Remove(toBeDeleted);
+    await context.SaveChangesAsync();
+
+    return Results.NoContent();
+})
+.WithName("DeleteProject")
+.WithOpenApi();
+
 
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

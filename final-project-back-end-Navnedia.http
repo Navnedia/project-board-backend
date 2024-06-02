@@ -5,6 +5,68 @@
 GET {{baseURL}}/initialize
 Accept: application/json
 
+
+###
+# @name GetProjects
+GET {{baseURL}}/projects
 Accept: application/json
+
+
+###
+# @prompt id the unique identifer of the project listing.
+
+# @name GetProjectById
+GET {{baseURL}}/projects/{{id}}
+Accept: application/json
+
+
+###
+# @prompt title the display title for the project listing.
+# @prompt description the body description for the project listing.
+# @prompt summary The short project listing summary (a sentence or two).
+# @prompt coverImageURL The URL to the main project cover image.
+# @prompt contactEmail The email address to contact for information about the project.
+
+# @name CreateProject
+POST {{baseURL}}/todoitems
+Content-Type: application/json
+
+{
+    "title": "{{title}}",
+    "description": "{{description}}",
+    "summary": "{{summary}}",
+    "coverImageURL": "{{coverImageURL}}",
+    "{{contactEmail}}": "{{{{contactEmail}}}}"
+}
+
+
+###
+# @prompt id the unique identifer of the project listing to be updated.
+# @prompt title the updated display title for the project listing.
+# @prompt description the updated body description for the project listing.
+# @prompt summary The updated short project listing summary (a sentence or two).
+# @prompt coverImageURL The updated URL to the main project cover image.
+# @prompt contactEmail The updated email address to contact for information about the project.
+
+# @name UpdateProject
+PUT {{baseURL}}/todoitems/{{id}}
+Content-Type: application/json
+
+{
+    "title": "{{title}}",
+    "description": "{{description}}",
+    "summary": "{{summary}}",
+    "coverImageURL": "{{coverImageURL}}",
+    "{{contactEmail}}": "{{{{contactEmail}}}}"
+}
+
+
+###
+# @prompt id the unique identifer of the project listing to be deleted.
+
+# @name DeleteProject
+DELETE {{baseURL}}/projects/{{id}}
+Accept: application/json
+
 
 ###
