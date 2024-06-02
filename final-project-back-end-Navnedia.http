@@ -1,6 +1,10 @@
-@final_project_back_end_Navnedia_HostAddress = http://localhost:5066
+@baseURL = http://localhost:5066
 
-GET {{final_project_back_end_Navnedia_HostAddress}}/weatherforecast/
+###
+# @name InitializeData
+GET {{baseURL}}/initialize
+Accept: application/json
+
 Accept: application/json
 
 ###
