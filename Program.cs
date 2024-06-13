@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using ProjectBoard.Models;
+using ProjectBoard.Auth;
 
 string sampleProjectDataFile = "ProjectSampleData.json";
 
@@ -144,5 +145,7 @@ app.MapDelete("/projects/{id}", async (int id, ProjectContext context) => {
 .WithName("DeleteProject")
 .WithOpenApi();
 
+app.UseStaticFiles();
+app.MapFallbackToFile("index.html");
 
 app.Run();

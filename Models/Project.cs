@@ -15,6 +15,8 @@ class Project {
     /// <summary>The email address to contact for information about the project.</summary>
     public string? ContactEmail { get; set; } = null;
 
+    // public int? OwnerId { get; set; }
+
     // In the future we will incude more details about the creator/poster and the team, etc.
     //! For now, I also have the Id automaticly generated, but I might wish to update this.
     //! I might want to add default values or optionals for some properties.
