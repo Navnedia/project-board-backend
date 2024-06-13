@@ -44,7 +44,7 @@ public class BasicAuthHandler: AuthenticationHandler<AuthenticationSchemeOptions
             password = credentials[1];
             // Generate the has to compare aggainst.
             hash = SharedHashAlgorithm(credentialBytes);
-        } catch (System.Exception) {
+        } catch (Exception e) {
             return AuthenticateResult.Fail("Ran into a problem while dycrypting user login credentials");
         }
 

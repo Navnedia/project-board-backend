@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using ProjectBoard.Models;
 using ProjectBoard.Auth;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 
 string sampleProjectDataFile = "ProjectSampleData.json";
 
@@ -25,10 +27,32 @@ string dbConnectionString = builder.Configuration.GetConnectionString("Projects"
     ?? "Data Source=./Database/ProjectsDb.db";
 builder.Services.AddSqlite<ProjectContext>(dbConnectionString);
 
+builder.Services.AddAuthorization();
+builder.Services.AddAuthentication("BasicAuthentication")
+    .AddScheme<AuthenticationSchemeOptions, BasicAuthHandler>("BasicAuthentication", null);
 
 // Configuring Swagger/OpenAPI services for automatic REST API documentation (https://aka.ms/aspnetcore/swashbuckle):
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(config => {
+    config.AddSecurityDefinition("basic", new OpenApiSecurityScheme {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "basic",
+        In = ParameterLocation.Header,
+        Description = "Basic Authorization header using the Bearer scheme."
+    });
+
+    config.AddSecurityRequirement(new OpenApiSecurityRequirement {
+        {
+            new OpenApiSecurityScheme {
+                Reference = new OpenApiReference {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "basic"
+                }
+            }, new string[] {}
+        }
+    });
+
     config.SwaggerDoc("v1", new OpenApiInfo {
         Title = "Project Board API",
         Description = "Sharing projects ideas to find your team.",
@@ -82,6 +106,51 @@ app.MapGet("/initialize", async (ProjectContext context) => {
 })
 .WithName("InitializeData")
 .WithOpenApi();
+
+
+// API endpoint to create/post a new User.
+app.MapPost("/users", async (User user, ProjectContext dbContext) => {
+    try {
+        dbContext.Users.Add(user);
+        await dbContext.SaveChangesAsync();
+    } catch (Exception e) {
+        Console.WriteLine($"Something went wrong adding new user:\n{e.Message}");
+        return Results.BadRequest(e.Message);
+    }
+
+    Console.WriteLine("Created new user");
+    return Results.Created($"/users/{user.Id}", user);
+})
+.WithName("CreateUser")
+.WithOpenApi();
+
+// API endpoint to POST login request to request authentication of an existing account.
+app.MapPost("/login", (User authorizedUser, ProjectContext dbContext) => {
+    // Get the user from the database and return it if found.
+    var user = dbContext.Users.FirstOrDefault(user => 
+        user.Username == authorizedUser.Username
+    );
+
+    return (user == null) 
+        ? Results.NotFound() 
+        : Results.Ok(user);
+})
+.WithName("UserLogin")
+.WithOpenApi()
+.RequireAuthorization(new AuthorizeAttribute() {
+    AuthenticationSchemes="BasicAuthentication"
+});
+
+// API endpoint to request a list of all projects for the authenticated user.
+app.MapGet("/users/projects", async (User authorizedUser, ProjectContext context) => (
+    // await context.Projects.FindAsync(Project => Project.OwnerId == authorizedUser.Id)
+))
+.WithName("GetUsersProjects")
+.WithOpenApi()
+.RequireAuthorization(new AuthorizeAttribute() {
+    AuthenticationSchemes="BasicAuthentication"
+});
+
 
 // API endpoint to request a list of all project listings.
 app.MapGet("/projects", async (ProjectContext context) => (
