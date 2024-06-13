@@ -142,14 +142,14 @@ app.MapPost("/login", (User authorizedUser, ProjectContext dbContext) => {
 });
 
 // API endpoint to request a list of all projects for the authenticated user.
-app.MapGet("/users/projects", async (User authorizedUser, ProjectContext context) => (
-    // await context.Projects.FindAsync(Project => Project.OwnerId == authorizedUser.Id)
-))
-.WithName("GetUsersProjects")
-.WithOpenApi()
-.RequireAuthorization(new AuthorizeAttribute() {
-    AuthenticationSchemes="BasicAuthentication"
-});
+// app.MapGet("/users/projects", async (User authorizedUser, ProjectContext context) => {
+//     // await context.Projects.FindAsync(Project => Project.OwnerId == authorizedUser.Id)
+// })
+// .WithName("GetUsersProjects")
+// .WithOpenApi()
+// .RequireAuthorization(new AuthorizeAttribute() {
+//     AuthenticationSchemes="BasicAuthentication"
+// });
 
 
 // API endpoint to request a list of all project listings.

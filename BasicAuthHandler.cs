@@ -9,9 +9,9 @@ using ProjectBoard.Models;
 
 namespace ProjectBoard.Auth;
 
-public class BasicAuthHandler: AuthenticationHandler<AuthenticationSchemeOptions> {
+class BasicAuthHandler: AuthenticationHandler<AuthenticationSchemeOptions> {
 
-    private ProjectContext projectContext;
+    public ProjectContext projectContext;
 
     public BasicAuthHandler(
         IOptionsMonitor<AuthenticationSchemeOptions> options,
@@ -26,7 +26,7 @@ public class BasicAuthHandler: AuthenticationHandler<AuthenticationSchemeOptions
 
     protected override Task<AuthenticateResult> HandleAuthenticateAsync() {
         if (!Request.Headers.ContainsKey("Authorization")) {
-            return AuthenticateResult.Fail("Authorization header not found");
+            return Task.FromResult(AuthenticateResult.Fail("Authorization header not found"));
         }
 
         string username;
@@ -45,29 +45,29 @@ public class BasicAuthHandler: AuthenticationHandler<AuthenticationSchemeOptions
             // Generate the has to compare aggainst.
             hash = SharedHashAlgorithm(credentialBytes);
         } catch (Exception e) {
-            return AuthenticateResult.Fail("Ran into a problem while dycrypting user login credentials");
+            return Task.FromResult(AuthenticateResult.Fail("Ran into a problem while dycrypting user login credentials"));
         }
 
         // Check for the user in the database and validate crededntial details match. 
         using (var dbContext = projectContext) {
             var user = dbContext.Users.FirstOrDefault(user => user.Username == username);
             if (user == null) {
-                return await Task.FromResult(AuthenticateResult.Fail("Incorrect username"));
+                return Task.FromResult(AuthenticateResult.Fail("Incorrect username"));
             }
 
             if (user.Password != password) {
-                return await Task.FromResult(AuthenticateResult.Fail("Incorrect password"));
+                return Task.FromResult(AuthenticateResult.Fail("Incorrect password"));
             }
 
             if (user.Hash != hash) {
-                return await Task.FromResult(AuthenticateResult.Fail("Invalid credentials"));
+                return Task.FromResult(AuthenticateResult.Fail("Invalid credentials"));
             }
 
             var claims = new[] { new Claim(ClaimTypes.Name, username) };
             var identity = new ClaimsIdentity(claims, Scheme.Name);
             var principal = new ClaimsPrincipal(identity);
             var ticket = new AuthenticationTicket(principal, Scheme.Name);
-            return AuthenticateResult.Success(ticket);
+            return Task.FromResult(AuthenticateResult.Success(ticket));
         }
     }
 
